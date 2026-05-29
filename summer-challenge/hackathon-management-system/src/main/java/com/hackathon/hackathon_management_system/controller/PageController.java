@@ -4,8 +4,9 @@ import com.hackathon.hackathon_management_system.entity.Hackathon;
 import com.hackathon.hackathon_management_system.entity.User;
 import com.hackathon.hackathon_management_system.service.HackathonService;
 import com.hackathon.hackathon_management_system.service.PaymentService;
-import com.hackathon.hackathon_management_system.service.PrizeService;
 import com.hackathon.hackathon_management_system.service.ProblemStatementService;
+import com.hackathon.hackathon_management_system.service.PrizeService;
+import com.hackathon.hackathon_management_system.service.RuleService;
 import com.hackathon.hackathon_management_system.service.SettingService;
 import com.hackathon.hackathon_management_system.service.UserService;
 import org.springframework.security.core.Authentication;
@@ -25,16 +26,19 @@ public class PageController {
     private final ProblemStatementService problemStatementService;
     private final PrizeService prizeService;
     private final SettingService settingService;
+    private final RuleService ruleService;
 
     public PageController(HackathonService hackathonService, UserService userService,
                           PaymentService paymentService, ProblemStatementService problemStatementService,
-                          PrizeService prizeService, SettingService settingService) {
+                          PrizeService prizeService, SettingService settingService,
+                          RuleService ruleService) {
         this.hackathonService = hackathonService;
         this.userService = userService;
         this.paymentService = paymentService;
         this.problemStatementService = problemStatementService;
         this.prizeService = prizeService;
         this.settingService = settingService;
+        this.ruleService = ruleService;
     }
 
     @GetMapping("/")
@@ -64,6 +68,18 @@ public class PageController {
         model.addAttribute("hackathon", hackathonService.findById(id));
         model.addAttribute("problems", problemStatementService.findByHackathon(id));
         model.addAttribute("prizes", prizeService.findAll());
+        model.addAttribute("rules", ruleService.findByHackathon(id));
+        model.addAttribute("teamMinMembers", settingService.get("team.minMembers", "3"));
+        model.addAttribute("teamMaxMembers", settingService.get("team.maxMembers", "5"));
+        return "hackathon-detail";
+    }
+
+    @GetMapping("/admin/hackathons/{id}")
+    public String adminHackathonDetail(@PathVariable Long id, Model model) {
+        model.addAttribute("hackathon", hackathonService.findById(id));
+        model.addAttribute("problems", problemStatementService.findByHackathon(id));
+        model.addAttribute("prizes", prizeService.findAll());
+        model.addAttribute("rules", ruleService.findByHackathon(id));
         model.addAttribute("teamMinMembers", settingService.get("team.minMembers", "3"));
         model.addAttribute("teamMaxMembers", settingService.get("team.maxMembers", "5"));
         return "hackathon-detail";

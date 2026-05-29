@@ -10,6 +10,9 @@
                 <span class="badge"
                       th:classappend="${hackathon.status == 'UPCOMING' ? 'badge-upcoming' : hackathon.status == 'ONGOING' ? 'badge-ongoing' : 'badge-closed'}"
                       th:text="${hackathon.status}">status</span>
+                <div sec:authorize="hasRole('ADMIN')" style="float: right;">
+                    <button class="btn btn-outline-primary btn-sm" onclick="openEditHackathonModal()"><i class="bi bi-pencil"></i> Edit Hackathon</button>
+                </div>
                 <h1 th:text="${hackathon.title}" style="margin-top: 12px;">Title</h1>
                 <p style="color: var(--text-secondary); font-size: 1.05rem; max-width: 700px;" th:text="${hackathon.description}">desc</p>
                 <div class="banner-meta">
@@ -17,9 +20,11 @@
                     <span><i class="bi bi-geo-alt"></i> <span th:text="${hackathon.location ?: 'Online'}">loc</span></span>
                     <span><i class="bi bi-currency-rupee"></i> ₹<span th:text="${hackathon.registrationFee}">249</span></span>
                 </div>
-                <div class="register-cta">
-                    <a sec:authorize="isAuthenticated() and !hasRole('ADMIN')" th:href="@{/dashboard}" class="btn btn-success btn-xl"><i class="bi bi-rocket-takeoff"></i> Register Now</a>
-                    <a sec:authorize="!isAuthenticated()" th:href="@{/login}" class="btn btn-primary btn-xl"><i class="bi bi-box-arrow-in-right"></i> Sign in to Register</a>
+                <div sec:authorize="isAuthenticated() and !hasRole('ADMIN')" style="margin-top: 24px;">
+                    <a th:href="@{/dashboard}" class="btn btn-success btn-xl"><i class="bi bi-rocket-takeoff"></i> Register Now</a>
+                </div>
+                <div sec:authorize="!isAuthenticated()" style="margin-top: 24px;">
+                    <a th:href="@{/login}" class="btn btn-primary btn-xl"><i class="bi bi-box-arrow-in-right"></i> Sign in to Register</a>
                 </div>
             </div>
         </div>
@@ -29,26 +34,51 @@
         <!-- Timeline -->
         <div class="section-card animate-in-delay-1">
             <h5><i class="bi bi-diagram-3"></i> Hackathon Timeline</h5>
-            <div class="timeline">
-                <div class="timeline-step active">
+            <div class="timeline" id="hackathonTimeline">
+                <div class="timeline-step" th:classappend="${hackathon.registrationDeadline != null and not hackathon.registrationDeadline.isBefore(T(java.time.LocalDate).now())} ? 'active' : ''">
                     <div class="timeline-dot"></div>
                     <div class="timeline-label">Registration</div>
+                    <div sec:authorize="hasRole('ADMIN')" style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">
+                        <span th:if="${hackathon.registrationDeadline != null}" th:text="${#temporals.format(hackathon.registrationDeadline, 'MMM dd')}">date</span>
+                        <span th:if="${hackathon.registrationDeadline == null}" style="color:var(--neon-red);">Not set</span>
+                        <button class="btn-edit-inline" onclick="openTimelineModal('registrationDeadline', 'Registration Deadline', '${hackathon.registrationDeadline}')"><i class="bi bi-pencil"></i></button>
+                    </div>
                 </div>
                 <div class="timeline-step">
-                    <div class="timeline-dot"></div>
+                    <div class="timeline-dot" th:classappend="${hackathon.stage1Deadline != null} ? 'active' : ''"></div>
                     <div class="timeline-label">Stage 1: Idea</div>
+                    <div sec:authorize="hasRole('ADMIN')" style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">
+                        <span th:if="${hackathon.stage1Deadline != null}" th:text="${#temporals.format(hackathon.stage1Deadline, 'MMM dd')}">date</span>
+                        <span th:if="${hackathon.stage1Deadline == null}" style="color:var(--neon-red);">Not set</span>
+                        <button class="btn-edit-inline" onclick="openTimelineModal('stage1Deadline', 'Stage 1 Deadline', '${hackathon.stage1Deadline}')"><i class="bi bi-pencil"></i></button>
+                    </div>
                 </div>
                 <div class="timeline-step">
-                    <div class="timeline-dot"></div>
+                    <div class="timeline-dot" th:classappend="${hackathon.stage2Deadline != null} ? 'active' : ''"></div>
                     <div class="timeline-label">Stage 2: MVP</div>
+                    <div sec:authorize="hasRole('ADMIN')" style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">
+                        <span th:if="${hackathon.stage2Deadline != null}" th:text="${#temporals.format(hackathon.stage2Deadline, 'MMM dd')}">date</span>
+                        <span th:if="${hackathon.stage2Deadline == null}" style="color:var(--neon-red);">Not set</span>
+                        <button class="btn-edit-inline" onclick="openTimelineModal('stage2Deadline', 'Stage 2 Deadline', '${hackathon.stage2Deadline}')"><i class="bi bi-pencil"></i></button>
+                    </div>
                 </div>
                 <div class="timeline-step">
-                    <div class="timeline-dot"></div>
+                    <div class="timeline-dot" th:classappend="${hackathon.stage3Deadline != null} ? 'active' : ''"></div>
                     <div class="timeline-label">Stage 3: Final</div>
+                    <div sec:authorize="hasRole('ADMIN')" style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">
+                        <span th:if="${hackathon.stage3Deadline != null}" th:text="${#temporals.format(hackathon.stage3Deadline, 'MMM dd')}">date</span>
+                        <span th:if="${hackathon.stage3Deadline == null}" style="color:var(--neon-red);">Not set</span>
+                        <button class="btn-edit-inline" onclick="openTimelineModal('stage3Deadline', 'Stage 3 Deadline', '${hackathon.stage3Deadline}')"><i class="bi bi-pencil"></i></button>
+                    </div>
                 </div>
                 <div class="timeline-step">
-                    <div class="timeline-dot"></div>
+                    <div class="timeline-dot" th:classappend="${hackathon.resultDate != null} ? 'active' : ''"></div>
                     <div class="timeline-label">Results</div>
+                    <div sec:authorize="hasRole('ADMIN')" style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">
+                        <span th:if="${hackathon.resultDate != null}" th:text="${#temporals.format(hackathon.resultDate, 'MMM dd')}">date</span>
+                        <span th:if="${hackathon.resultDate == null}" style="color:var(--neon-red);">Not set</span>
+                        <button class="btn-edit-inline" onclick="openTimelineModal('resultDate', 'Result Date', '${hackathon.resultDate}')"><i class="bi bi-pencil"></i></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -56,37 +86,66 @@
         <div class="grid-2 animate-in-delay-2">
             <!-- Rules -->
             <div class="section-card">
-                <h5><i class="bi bi-list-check"></i> Rules & Guidelines</h5>
+                <h5>
+                    <i class="bi bi-list-check"></i> Rules & Guidelines
+                    <span sec:authorize="hasRole('ADMIN')" style="margin-left: auto; display: flex; gap: 6px;">
+                        <button class="btn btn-sm btn-outline-primary" onclick="openAddRuleModal()"><i class="bi bi-plus-lg"></i> Add Rule</button>
+                    </span>
+                </h5>
                 <ul id="rulesList">
-                    <li>Team size: <span th:text="${teamMinMembers}">3</span>-<span th:text="${teamMaxMembers}">4</span> members</li>
-                    <li>Each member must register individually</li>
-                    <li>Registration fee: ₹<span th:text="${hackathon.registrationFee}">249</span> per person</li>
-                    <li>All code must be original work</li>
-                    <li>Submissions must be completed before deadlines</li>
-                    <li>Final pitch will be conducted via Google Meet</li>
+                    <li th:each="r : ${rules}" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span th:text="${r.content}">rule</span>
+                        <span sec:authorize="hasRole('ADMIN')" style="display: flex; gap: 4px; flex-shrink: 0;">
+                            <button class="btn-edit-inline" onclick="openEditRuleModal(${r.id}, '${r.content.replaceAll("'", "\\\\'")}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn-edit-inline" style="color:var(--neon-red);" onclick="deleteRule(${r.id})"><i class="bi bi-trash"></i></button>
+                        </span>
+                    </li>
+                    <li th:if="${#lists.isEmpty(rules)}" sec:authorize="hasRole('ADMIN')" style="color: var(--text-muted); font-style: italic; justify-content: center;">No rules added yet. Click "Add Rule" to create one.</li>
+                    <li th:if="${#lists.isEmpty(rules)}" sec:authorize="!hasRole('ADMIN')" style="color: var(--text-muted); font-style: italic; justify-content: center;">Rules will be announced soon.</li>
                 </ul>
             </div>
 
             <!-- Prizes -->
             <div class="section-card">
-                <h5><i class="bi bi-trophy-fill" style="color: var(--neon-yellow);"></i> Prizes</h5>
+                <h5>
+                    <i class="bi bi-trophy-fill" style="color: var(--neon-yellow);"></i> Prizes
+                    <span sec:authorize="hasRole('ADMIN')" style="margin-left: auto; display: flex; gap: 6px;">
+                        <button class="btn btn-sm btn-outline-primary" onclick="openAddPrizeModal()"><i class="bi bi-plus-lg"></i> Add Prize</button>
+                    </span>
+                </h5>
                 <ul th:if="${not #lists.isEmpty(prizes)}">
-                    <li th:each="p : ${prizes}">
-                        <strong th:styleappend="${p.rank == 1} ? 'color: var(--neon-yellow);' : 'color: var(--text-secondary);'"
-                                th:text="${p.rank == 1 ? '1st' : p.rank == 2 ? '2nd' : p.rank == 3 ? '3rd' : p.rank + 'th' + ' Place'}">Place</strong>
-                        — ₹<span th:text="${p.amount}">0</span>
-                        <span th:if="${p.description}" th:text="' — ' + ${p.description}"></span>
+                    <li th:each="p : ${prizes}" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>
+                            <strong th:styleappend="${p.rank == 1} ? 'color: var(--neon-yellow);' : 'color: var(--text-secondary);'"
+                                    th:text="${p.rank == 1 ? '1st' : p.rank == 2 ? '2nd' : p.rank == 3 ? '3rd' : p.rank + 'th' + ' Place'}">Place</strong>
+                            — ₹<span th:text="${p.amount}">0</span>
+                            <span th:if="${p.description}" th:text="' — ' + ${p.description}"></span>
+                        </span>
+                        <span sec:authorize="hasRole('ADMIN')" style="display: flex; gap: 4px; flex-shrink: 0;">
+                            <button class="btn-edit-inline" onclick="openEditPrizeModal(${p.id}, ${p.rank}, '${p.title.replaceAll("'", "\\\\'")}', ${p.amount}, '${p.description.replaceAll("'", "\\\\'")}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn-edit-inline" style="color:var(--neon-red);" onclick="deletePrize(${p.id})"><i class="bi bi-trash"></i></button>
+                        </span>
                     </li>
                 </ul>
-                <p th:if="${#lists.isEmpty(prizes)}" style="color: var(--text-muted);">Prizes will be announced soon.</p>
+                <p th:if="${#lists.isEmpty(prizes)}" sec:authorize="hasRole('ADMIN')" style="color: var(--text-muted);">No prizes added yet. Click "Add Prize" to create one.</p>
+                <p th:if="${#lists.isEmpty(prizes)}" sec:authorize="!hasRole('ADMIN')" style="color: var(--text-muted);">Prizes will be announced soon.</p>
             </div>
         </div>
 
         <!-- Problem Statements -->
         <div class="section-card animate-in-delay-3">
-            <h5><i class="bi bi-journal-code"></i> Problem Statements</h5>
-            <div class="grid-3" style="margin-top: 16px;">
+            <h5>
+                <i class="bi bi-journal-code"></i> Problem Statements
+                <span sec:authorize="hasRole('ADMIN')" style="margin-left: auto; display: flex; gap: 6px;">
+                    <button class="btn btn-sm btn-outline-primary" onclick="openAddProblemModal()"><i class="bi bi-plus-lg"></i> Add Problem Statement</button>
+                </span>
+            </h5>
+            <div class="grid-3" style="margin-top: 16px;" id="problemGrid">
                 <div th:each="p : ${problems}" class="glass-panel" style="text-align: center; position: relative; overflow: hidden;">
+                    <span sec:authorize="hasRole('ADMIN')" style="position: absolute; top: 8px; left: 8px; display: flex; gap: 4px; z-index: 2;">
+                        <button class="btn-edit-inline" onclick="openEditProblemModal(${p.id}, '${p.title.replaceAll("'", "\\\\'")}', '${p.description.replaceAll("'", "\\\\'")}', '${p.difficulty ?: 'medium'}', '${p.techStack ?: ''.replaceAll("'", "\\\\'")}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn-edit-inline" style="color:var(--neon-red);" onclick="deleteProblem(${p.id})"><i class="bi bi-trash"></i></button>
+                    </span>
                     <span class="badge" style="position: absolute; top: 8px; right: 8px; font-size: 0.7rem;"
                           th:classappend="${p.difficulty == 'hard' ? 'badge-closed' : p.difficulty == 'medium' ? 'badge-ongoing' : 'badge-upcoming'}"
                           th:text="${p.difficulty ?: 'medium'}">medium</span>
@@ -98,11 +157,423 @@
             </div>
             <div th:if="${#lists.isEmpty(problems)}" style="text-align: center; padding: 24px; color: var(--text-muted);">
                 <i class="bi bi-journal-code" style="font-size: 2rem; display: block; margin-bottom: 8px;"></i>
-                <p>Problem statements will be announced soon.</p>
+                <p sec:authorize="hasRole('ADMIN')">No problem statements added yet. Click "Add Problem Statement" to create one.</p>
+                <p sec:authorize="!hasRole('ADMIN')">Problem statements will be announced soon.</p>
             </div>
         </div>
     </div>
 
+    <!-- Edit Hackathon Modal -->
+    <div class="modal fade" id="editHackathonModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title"><i class="bi bi-pencil" style="color:var(--neon-cyan);"></i> Edit Hackathon</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="grid-2" style="gap: 12px;">
+                        <div class="mb-2"><label class="form-label">Title</label><input type="text" class="form-control" id="editTitle"></div>
+                        <div class="mb-2"><label class="form-label">Status</label>
+                            <select class="form-select" id="editStatus">
+                                <option value="UPCOMING">Upcoming</option>
+                                <option value="ONGOING">Ongoing</option>
+                                <option value="COMPLETED">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-2"><label class="form-label">Description</label><textarea class="form-control" id="editDescription" rows="3"></textarea></div>
+                    <div class="grid-2" style="gap: 12px;">
+                        <div class="mb-2"><label class="form-label">Start Date</label><input type="date" class="form-control" id="editStartDate"></div>
+                        <div class="mb-2"><label class="form-label">End Date</label><input type="date" class="form-control" id="editEndDate"></div>
+                    </div>
+                    <div class="grid-2" style="gap: 12px;">
+                        <div class="mb-2"><label class="form-label">Registration Fee (₹)</label><input type="number" class="form-control" id="editFee"></div>
+                        <div class="mb-2"><label class="form-label">Mode</label>
+                            <select class="form-select" id="editMode"><option value="Online">Online</option><option value="Offline">Offline</option></select>
+                        </div>
+                    </div>
+                    <div class="grid-2" style="gap: 12px;">
+                        <div class="mb-2"><label class="form-label">Location</label><input type="text" class="form-control" id="editLocation"></div>
+                        <div class="mb-2"><label class="form-label">Meeting Link</label><input type="url" class="form-control" id="editMeetingLink" placeholder="https://meet.google.com/..."></div>
+                    </div>
+                    <div class="grid-2" style="gap: 12px;">
+                        <div class="mb-2"><label class="form-label">Max Teams</label><input type="number" class="form-control" id="editMaxTeams"></div>
+                        <div class="mb-2"><label class="form-label">Banner Image URL</label><input type="url" class="form-control" id="editBannerImage" placeholder="https://..."></div>
+                    </div>
+                    <div class="grid-2" style="gap: 12px;">
+                        <div class="mb-2"><label class="form-label">Min Team Size</label><input type="number" class="form-control" id="editMinTeamSize"></div>
+                        <div class="mb-2"><label class="form-label">Max Team Size</label><input type="number" class="form-control" id="editMaxTeamSize"></div>
+                    </div>
+                    <input type="hidden" id="editHackathonId" th:value="${hackathon.id}">
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveHackathon()"><i class="bi bi-check-lg"></i> Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Date Modal -->
+    <div class="modal fade" id="timelineModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title" id="timelineModalTitle">Edit Date</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" id="timelineModalLabel">Date</label>
+                    <input type="date" class="form-control" id="timelineDateInput">
+                    <input type="hidden" id="timelineFieldName">
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveTimelineDate()"><i class="bi bi-check-lg"></i> Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Rule Modal -->
+    <div class="modal fade" id="ruleModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title" id="ruleModalTitle">Add Rule</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Rule Content</label>
+                    <input type="text" class="form-control" id="ruleContentInput" placeholder="Enter rule...">
+                    <input type="hidden" id="ruleEditId">
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" id="ruleSaveBtn" onclick="saveRule()"><i class="bi bi-check-lg"></i> Add Rule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Prize Modal -->
+    <div class="modal fade" id="prizeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title" id="prizeModalTitle">Add Prize</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="grid-2" style="gap: 12px;">
+                        <div class="mb-2"><label class="form-label">Position (Rank)</label><input type="number" class="form-control" id="prizeRank" placeholder="1"></div>
+                        <div class="mb-2"><label class="form-label">Title</label><input type="text" class="form-control" id="prizeTitle" placeholder="Grand Prize"></div>
+                    </div>
+                    <div class="grid-2" style="gap: 12px;">
+                        <div class="mb-2"><label class="form-label">Amount (₹)</label><input type="number" class="form-control" id="prizeAmount" placeholder="100000"></div>
+                        <div class="mb-2"><label class="form-label">Type</label>
+                            <select class="form-select" id="prizeType"><option value="cash">Cash</option><option value="voucher">Voucher</option><option value="other">Other</option></select>
+                        </div>
+                    </div>
+                    <div class="mb-2"><label class="form-label">Description</label><input type="text" class="form-control" id="prizeDescription" placeholder="Winner takes all"></div>
+                    <input type="hidden" id="prizeEditId">
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" id="prizeSaveBtn" onclick="savePrize()"><i class="bi bi-check-lg"></i> Add Prize</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Problem Modal -->
+    <div class="modal fade" id="problemModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title" id="problemModalTitle">Add Problem Statement</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="form-label">Title</label><input type="text" class="form-control" id="problemTitle" placeholder="AI-Powered Assistant"></div>
+                    <div class="mb-2"><label class="form-label">Description</label><textarea class="form-control" id="problemDescription" rows="3" placeholder="Build an intelligent assistant..."></textarea></div>
+                    <div class="grid-2" style="gap: 12px;">
+                        <div class="mb-2"><label class="form-label">Difficulty</label>
+                            <select class="form-select" id="problemDifficulty">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="mb-2"><label class="form-label">Technologies</label><input type="text" class="form-control" id="problemTech" placeholder="Python, React, LLM"></div>
+                    </div>
+                    <input type="hidden" id="problemEditId">
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" id="problemSaveBtn" onclick="saveProblem()"><i class="bi bi-check-lg"></i> Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const HACKATHON_ID = [[${hackathon.id}]];
+    const IS_ADMIN = [[${#authorization.expression('hasRole(''ADMIN'')')}]];
+    let timelineModalInstance, ruleModalInstance, prizeModalInstance, problemModalInstance, hackathonModalInstance;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (IS_ADMIN) {
+            document.querySelectorAll('.modal').forEach(m => {
+                if (m.id === 'editHackathonModal') hackathonModalInstance = new bootstrap.Modal(m);
+                else if (m.id === 'timelineModal') timelineModalInstance = new bootstrap.Modal(m);
+                else if (m.id === 'ruleModal') ruleModalInstance = new bootstrap.Modal(m);
+                else if (m.id === 'prizeModal') prizeModalInstance = new bootstrap.Modal(m);
+                else if (m.id === 'problemModal') problemModalInstance = new bootstrap.Modal(m);
+            });
+        }
+    });
+
+    // ===== Hackathon CRUD =====
+    function openEditHackathonModal() {
+        fetch('/api/admin/hackathons/' + HACKATHON_ID)
+            .then(r => r.json())
+            .then(h => {
+                document.getElementById('editTitle').value = h.title || '';
+                document.getElementById('editDescription').value = h.description || '';
+                document.getElementById('editStartDate').value = h.startDate || '';
+                document.getElementById('editEndDate').value = h.endDate || '';
+                document.getElementById('editFee').value = h.registrationFee || '';
+                document.getElementById('editLocation').value = h.location || '';
+                document.getElementById('editStatus').value = h.status || 'UPCOMING';
+                document.getElementById('editMode').value = h.mode || 'Online';
+                document.getElementById('editMeetingLink').value = h.meetingLink || '';
+                document.getElementById('editMaxTeams').value = h.maxTeams || '';
+                document.getElementById('editMinTeamSize').value = h.minTeamSize || '';
+                document.getElementById('editMaxTeamSize').value = h.maxTeamSize || '';
+                document.getElementById('editBannerImage').value = h.bannerImage || '';
+                hackathonModalInstance.show();
+            });
+    }
+
+    function saveHackathon() {
+        const data = {
+            title: document.getElementById('editTitle').value,
+            description: document.getElementById('editDescription').value,
+            startDate: document.getElementById('editStartDate').value,
+            endDate: document.getElementById('editEndDate').value,
+            registrationFee: document.getElementById('editFee').value,
+            location: document.getElementById('editLocation').value,
+            status: document.getElementById('editStatus').value,
+            mode: document.getElementById('editMode').value,
+            meetingLink: document.getElementById('editMeetingLink').value,
+            maxTeams: document.getElementById('editMaxTeams').value || null,
+            minTeamSize: document.getElementById('editMinTeamSize').value || null,
+            maxTeamSize: document.getElementById('editMaxTeamSize').value || null,
+            bannerImage: document.getElementById('editBannerImage').value || null
+        };
+        fetch('/api/admin/hackathons/' + HACKATHON_ID, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(r => r.json()).then(r => {
+            if (r.success) { hackathonModalInstance.hide(); location.reload(); }
+            else alert('Failed to save');
+        });
+    }
+
+    // ===== Timeline =====
+    function openTimelineModal(field, label, currentValue) {
+        document.getElementById('timelineModalTitle').textContent = 'Edit ' + label;
+        document.getElementById('timelineModalLabel').textContent = label;
+        document.getElementById('timelineDateInput').value = currentValue && currentValue !== 'null' ? currentValue : '';
+        document.getElementById('timelineFieldName').value = field;
+        timelineModalInstance.show();
+    }
+
+    function saveTimelineDate() {
+        const field = document.getElementById('timelineFieldName').value;
+        const value = document.getElementById('timelineDateInput').value || null;
+        const data = {};
+        data[field] = value;
+        fetch('/api/admin/hackathons/' + HACKATHON_ID, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(r => r.json()).then(r => {
+            if (r.success) { timelineModalInstance.hide(); location.reload(); }
+            else alert('Failed to save date');
+        });
+    }
+
+    // ===== Rules =====
+    function openAddRuleModal() {
+        document.getElementById('ruleModalTitle').textContent = 'Add Rule';
+        document.getElementById('ruleContentInput').value = '';
+        document.getElementById('ruleEditId').value = '';
+        document.getElementById('ruleSaveBtn').innerHTML = '<i class="bi bi-check-lg"></i> Add Rule';
+        ruleModalInstance.show();
+    }
+
+    function openEditRuleModal(id, content) {
+        document.getElementById('ruleModalTitle').textContent = 'Edit Rule';
+        document.getElementById('ruleContentInput').value = content;
+        document.getElementById('ruleEditId').value = id;
+        document.getElementById('ruleSaveBtn').innerHTML = '<i class="bi bi-check-lg"></i> Save';
+        ruleModalInstance.show();
+    }
+
+    function saveRule() {
+        const id = document.getElementById('ruleEditId').value;
+        const content = document.getElementById('ruleContentInput').value;
+        if (!content) { alert('Please enter a rule'); return; }
+
+        if (id) {
+            fetch('/api/admin/rules/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            }).then(r => r.json()).then(r => {
+                if (r.success) { ruleModalInstance.hide(); location.reload(); }
+            });
+        } else {
+            fetch('/api/admin/rules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hackathonId: HACKATHON_ID, content: content })
+            }).then(r => r.json()).then(r => {
+                if (r.id) { ruleModalInstance.hide(); location.reload(); }
+            });
+        }
+    }
+
+    function deleteRule(id) {
+        if (!confirm('Delete this rule?')) return;
+        fetch('/api/admin/rules/' + id, { method: 'DELETE' })
+            .then(r => r.json()).then(r => { if (r.success) location.reload(); });
+    }
+
+    // ===== Prizes =====
+    function openAddPrizeModal() {
+        document.getElementById('prizeModalTitle').textContent = 'Add Prize';
+        document.getElementById('prizeRank').value = '';
+        document.getElementById('prizeTitle').value = '';
+        document.getElementById('prizeAmount').value = '';
+        document.getElementById('prizeType').value = 'cash';
+        document.getElementById('prizeDescription').value = '';
+        document.getElementById('prizeEditId').value = '';
+        document.getElementById('prizeSaveBtn').innerHTML = '<i class="bi bi-check-lg"></i> Add Prize';
+        prizeModalInstance.show();
+    }
+
+    function openEditPrizeModal(id, rank, title, amount, description) {
+        document.getElementById('prizeModalTitle').textContent = 'Edit Prize';
+        document.getElementById('prizeRank').value = rank;
+        document.getElementById('prizeTitle').value = title;
+        document.getElementById('prizeAmount').value = amount;
+        document.getElementById('prizeType').value = 'cash';
+        document.getElementById('prizeDescription').value = description;
+        document.getElementById('prizeEditId').value = id;
+        document.getElementById('prizeSaveBtn').innerHTML = '<i class="bi bi-check-lg"></i> Save';
+        prizeModalInstance.show();
+    }
+
+    function savePrize() {
+        const id = document.getElementById('prizeEditId').value;
+        const data = {
+            rank: document.getElementById('prizeRank').value,
+            title: document.getElementById('prizeTitle').value,
+            amount: document.getElementById('prizeAmount').value,
+            type: document.getElementById('prizeType').value,
+            description: document.getElementById('prizeDescription').value
+        };
+        if (!data.title || !data.amount) { alert('Title and amount required'); return; }
+
+        if (id) {
+            fetch('/api/admin/prizes/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(r => {
+                if (r.success) { prizeModalInstance.hide(); location.reload(); }
+            });
+        } else {
+            fetch('/api/admin/prizes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(r => {
+                if (r.id) { prizeModalInstance.hide(); location.reload(); }
+            });
+        }
+    }
+
+    function deletePrize(id) {
+        if (!confirm('Delete this prize?')) return;
+        fetch('/api/admin/prizes/' + id, { method: 'DELETE' })
+            .then(r => r.json()).then(r => { if (r.success) location.reload(); });
+    }
+
+    // ===== Problem Statements =====
+    function openAddProblemModal() {
+        document.getElementById('problemModalTitle').textContent = 'Add Problem Statement';
+        document.getElementById('problemTitle').value = '';
+        document.getElementById('problemDescription').value = '';
+        document.getElementById('problemDifficulty').value = 'medium';
+        document.getElementById('problemTech').value = '';
+        document.getElementById('problemEditId').value = '';
+        document.getElementById('problemSaveBtn').innerHTML = '<i class="bi bi-check-lg"></i> Add';
+        problemModalInstance.show();
+    }
+
+    function openEditProblemModal(id, title, description, difficulty, tech) {
+        document.getElementById('problemModalTitle').textContent = 'Edit Problem Statement';
+        document.getElementById('problemTitle').value = title;
+        document.getElementById('problemDescription').value = description;
+        document.getElementById('problemDifficulty').value = difficulty;
+        document.getElementById('problemTech').value = tech;
+        document.getElementById('problemEditId').value = id;
+        document.getElementById('problemSaveBtn').innerHTML = '<i class="bi bi-check-lg"></i> Save';
+        problemModalInstance.show();
+    }
+
+    function saveProblem() {
+        const id = document.getElementById('problemEditId').value;
+        const data = {
+            hackathonId: HACKATHON_ID,
+            title: document.getElementById('problemTitle').value,
+            description: document.getElementById('problemDescription').value,
+            difficulty: document.getElementById('problemDifficulty').value,
+            techStack: document.getElementById('problemTech').value
+        };
+        if (!data.title) { alert('Title is required'); return; }
+
+        if (id) {
+            fetch('/api/admin/problems/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(r => {
+                if (r.success) { problemModalInstance.hide(); location.reload(); }
+            });
+        } else {
+            fetch('/api/admin/problems', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(r => {
+                if (r.id) { problemModalInstance.hide(); location.reload(); }
+            });
+        }
+    }
+
+    function deleteProblem(id) {
+        if (!confirm('Delete this problem statement?')) return;
+        fetch('/api/admin/problems/' + id, { method: 'DELETE' })
+            .then(r => r.json()).then(r => { if (r.success) location.reload(); });
+    }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

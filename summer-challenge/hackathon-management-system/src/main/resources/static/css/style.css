@@ -825,3 +825,37 @@ h2 i { color: var(--neon-cyan); margin-right: 10px; }
     .stats-grid { grid-template-columns: 1fr; }
     .payment-method-tab { min-width: calc(50% - 6px); }
 }
+
+/* ===== Admin Edit Controls ===== */
+.btn-edit-inline {
+    background: none;
+    border: none;
+    color: var(--neon-cyan);
+    padding: 2px 6px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    border-radius: 4px;
+    transition: var(--transition);
+    opacity: 0.6;
+}
+.btn-edit-inline:hover { opacity: 1; background: var(--neon-cyan-soft); }
+.section-card h5 .btn-edit-inline { font-size: 0.85rem; }
+.timeline-step .btn-edit-inline { font-size: 0.7rem; display: inline-block; margin-top: 2px; }
+.admin-float-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.modal-content .form-control, .modal-content .form-select {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+.modal-content .form-control:focus, .modal-content .form-select:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 20px var(--neon-cyan-glow);
+}
+.modal-content .form-label { color: var(--text-secondary); }
+.modal-backdrop { background: rgba(0,0,0,0.7); }
+.btn-close { filter: invert(1); opacity: 0.5; }
+.btn-close:hover { opacity: 1; }

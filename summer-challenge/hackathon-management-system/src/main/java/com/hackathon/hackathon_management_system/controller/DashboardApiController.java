@@ -2,6 +2,7 @@ package com.hackathon.hackathon_management_system.controller;
 
 import com.hackathon.hackathon_management_system.entity.*;
 import com.hackathon.hackathon_management_system.service.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,9 @@ public class DashboardApiController {
     private final PaymentService paymentService;
     private final SubmissionService submissionService;
     private final HackathonService hackathonService;
+
+    @Value("${RAZORPAY_KEY_ID:}")
+    private String razorpayKeyId;
 
     public DashboardApiController(UserService userService, TeamService teamService,
                                   PaymentService paymentService, SubmissionService submissionService,
@@ -59,15 +63,13 @@ public class DashboardApiController {
 
         Hackathon hackathon = hackathonService.findById(body.get("hackathonId"));
         Payment payment = paymentService.createOrder(user, hackathon);
-        return ResponseEntity.ok(Map.of("orderId", payment.getRazorpayOrderId(), "amount", payment.getAmount(), "paymentId", payment.getId()));
-    }
-
-    @PostMapping("/payments/verify")
-    public ResponseEntity<?> verifyPayment(Authentication auth, @RequestBody Map<String, String> body) {
-        User user = userService.findByEmail(auth.getName()).orElse(null);
-        if (user == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
-        paymentService.verifyPayment(body.get("razorpay_order_id"), body.get("razorpay_payment_id"), body.get("razorpay_signature"));
-        return ResponseEntity.ok(Map.of("success", true, "hasPaid", true));
+        int amountInPaise = (int) (hackathon.getRegistrationFee() * 100);
+        return ResponseEntity.ok(Map.of(
+            "orderId", payment.getRazorpayOrderId(),
+            "amount", amountInPaise,
+            "currency", "INR",
+            "key", razorpayKeyId
+        ));
     }
 
     @GetMapping("/teams/my")

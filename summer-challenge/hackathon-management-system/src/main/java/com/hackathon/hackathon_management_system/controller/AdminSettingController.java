@@ -19,12 +19,13 @@ public class AdminSettingController {
     private final TeamService teamService;
     private final HackathonService hackathonService;
     private final UserService userService;
+    private final RuleService ruleService;
 
     public AdminSettingController(SettingService settingService, StageConfigService stageConfigService,
                                    PrizeService prizeService, AnnouncementService announcementService,
                                    ProblemStatementService problemStatementService,
                                    TeamService teamService, HackathonService hackathonService,
-                                   UserService userService) {
+                                   UserService userService, RuleService ruleService) {
         this.settingService = settingService;
         this.stageConfigService = stageConfigService;
         this.prizeService = prizeService;
@@ -33,6 +34,7 @@ public class AdminSettingController {
         this.teamService = teamService;
         this.hackathonService = hackathonService;
         this.userService = userService;
+        this.ruleService = ruleService;
     }
 
     // ===== Settings =====
@@ -98,6 +100,27 @@ public class AdminSettingController {
     }
 
     // ===== Hackathons =====
+    @GetMapping("/hackathons/{id}")
+    public ResponseEntity<?> getHackathon(@PathVariable Long id) {
+        Hackathon h = hackathonService.findById(id);
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", h.getId()); m.put("title", h.getTitle());
+        m.put("description", h.getDescription());
+        m.put("startDate", h.getStartDate() != null ? h.getStartDate().toString() : null);
+        m.put("endDate", h.getEndDate() != null ? h.getEndDate().toString() : null);
+        m.put("location", h.getLocation()); m.put("status", h.getStatus());
+        m.put("registrationFee", h.getRegistrationFee());
+        m.put("mode", h.getMode()); m.put("meetingLink", h.getMeetingLink());
+        m.put("maxTeams", h.getMaxTeams()); m.put("minTeamSize", h.getMinTeamSize());
+        m.put("maxTeamSize", h.getMaxTeamSize()); m.put("bannerImage", h.getBannerImage());
+        m.put("registrationDeadline", h.getRegistrationDeadline() != null ? h.getRegistrationDeadline().toString() : null);
+        m.put("stage1Deadline", h.getStage1Deadline() != null ? h.getStage1Deadline().toString() : null);
+        m.put("stage2Deadline", h.getStage2Deadline() != null ? h.getStage2Deadline().toString() : null);
+        m.put("stage3Deadline", h.getStage3Deadline() != null ? h.getStage3Deadline().toString() : null);
+        m.put("resultDate", h.getResultDate() != null ? h.getResultDate().toString() : null);
+        return ResponseEntity.ok(m);
+    }
+
     @PostMapping("/hackathons")
     public ResponseEntity<?> createHackathon(@RequestBody Map<String, Object> body) {
         Hackathon h = new Hackathon();
@@ -121,6 +144,17 @@ public class AdminSettingController {
         if (body.containsKey("status")) h.setStatus((String) body.get("status"));
         if (body.containsKey("startDate")) h.setStartDate(java.time.LocalDate.parse((String) body.get("startDate")));
         if (body.containsKey("endDate")) h.setEndDate(java.time.LocalDate.parse((String) body.get("endDate")));
+        if (body.containsKey("mode")) h.setMode((String) body.get("mode"));
+        if (body.containsKey("meetingLink")) h.setMeetingLink((String) body.get("meetingLink"));
+        if (body.containsKey("maxTeams")) h.setMaxTeams(body.get("maxTeams") != null ? Integer.parseInt(body.get("maxTeams").toString()) : null);
+        if (body.containsKey("minTeamSize")) h.setMinTeamSize(body.get("minTeamSize") != null ? Integer.parseInt(body.get("minTeamSize").toString()) : null);
+        if (body.containsKey("maxTeamSize")) h.setMaxTeamSize(body.get("maxTeamSize") != null ? Integer.parseInt(body.get("maxTeamSize").toString()) : null);
+        if (body.containsKey("bannerImage")) h.setBannerImage((String) body.get("bannerImage"));
+        if (body.containsKey("registrationDeadline")) h.setRegistrationDeadline(body.get("registrationDeadline") != null ? java.time.LocalDate.parse((String) body.get("registrationDeadline")) : null);
+        if (body.containsKey("stage1Deadline")) h.setStage1Deadline(body.get("stage1Deadline") != null ? java.time.LocalDate.parse((String) body.get("stage1Deadline")) : null);
+        if (body.containsKey("stage2Deadline")) h.setStage2Deadline(body.get("stage2Deadline") != null ? java.time.LocalDate.parse((String) body.get("stage2Deadline")) : null);
+        if (body.containsKey("stage3Deadline")) h.setStage3Deadline(body.get("stage3Deadline") != null ? java.time.LocalDate.parse((String) body.get("stage3Deadline")) : null);
+        if (body.containsKey("resultDate")) h.setResultDate(body.get("resultDate") != null ? java.time.LocalDate.parse((String) body.get("resultDate")) : null);
         hackathonService.create(h);
         return ResponseEntity.ok(Map.of("success", true));
     }
@@ -278,6 +312,36 @@ public class AdminSettingController {
     @DeleteMapping("/problems/{id}")
     public ResponseEntity<?> deleteProblem(@PathVariable Long id) {
         problemStatementService.delete(id);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    // ===== Rules =====
+    @GetMapping("/rules/{hackathonId}")
+    public ResponseEntity<?> rulesByHackathon(@PathVariable Long hackathonId) {
+        return ResponseEntity.ok(ruleService.findByHackathon(hackathonId));
+    }
+
+    @PostMapping("/rules")
+    public ResponseEntity<?> createRule(@RequestBody Map<String, Object> body) {
+        Rule r = new Rule();
+        r.setHackathonId(Long.valueOf(body.get("hackathonId").toString()));
+        r.setContent((String) body.get("content"));
+        if (body.containsKey("sortOrder")) r.setSortOrder(Integer.valueOf(body.get("sortOrder").toString()));
+        return ResponseEntity.ok(Map.of("id", ruleService.save(r).getId()));
+    }
+
+    @PutMapping("/rules/{id}")
+    public ResponseEntity<?> updateRule(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        Rule r = ruleService.findById(id);
+        if (body.containsKey("content")) r.setContent((String) body.get("content"));
+        if (body.containsKey("sortOrder")) r.setSortOrder(Integer.valueOf(body.get("sortOrder").toString()));
+        ruleService.save(r);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    @DeleteMapping("/rules/{id}")
+    public ResponseEntity<?> deleteRule(@PathVariable Long id) {
+        ruleService.delete(id);
         return ResponseEntity.ok(Map.of("success", true));
     }
 }

@@ -51,7 +51,7 @@
         currentSection = section;
         const area = document.getElementById('contentArea');
         area.innerHTML = '<div class="text-center py-5"><div class="spinner-border" style="color:var(--neon-cyan);"></div><p class="mt-2 text-muted">Loading...</p></div>';
-        if (section === 'stages') return loadStageManagement(area);
+        if (section === 'stage') return loadStageManagement(area);
         if (section === 'prizes') return loadPrizeManagement(area);
         if (section === 'problems') return loadProblemManagement(area);
         if (section === 'announcements') return loadAnnouncementManagement(area);
