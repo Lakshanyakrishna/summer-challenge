@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Create Hackathon - Hackathon')}"></head>
+<body>
+    <div th:replace="~{fragments :: navbar}"></div>
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <h2><i class="bi bi-plus-circle"></i>Create Hackathon</h2>
+                <div class="card">
+                    <div class="card-body p-4">
+                        <form th:action="@{/hackathons/create}" th:object="${hackathonDto}" method="post">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input type="text" id="title" th:field="*{title}" class="form-control" placeholder="Enter hackathon title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea id="description" th:field="*{description}" class="form-control" rows="4" placeholder="Describe the hackathon..."></textarea>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="startDate" class="form-label">Start Date</label>
+                                    <input type="date" id="startDate" th:field="*{startDate}" class="form-control" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="endDate" class="form-label">End Date</label>
+                                    <input type="date" id="endDate" th:field="*{endDate}" class="form-control" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" id="location" th:field="*{location}" class="form-control" placeholder="Online or venue">
+                                </div>
+                            </div>
+                            <div class="mt-4 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-check-lg me-1"></i>Create Hackathon</button>
+                                <a th:href="@{/hackathons}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

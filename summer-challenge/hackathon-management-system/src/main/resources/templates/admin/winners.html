@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Winner Selection - Hackathon')}"></head>
+<body>
+    <div th:replace="~{fragments :: navbar}"></div>
+    <div class="container py-4">
+        <h2><i class="bi bi-trophy-fill" style="color: var(--neon-yellow);"></i>Winner Selection</h2>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" th:action="@{/admin/winners}" class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label for="hackathonId" class="form-label">Hackathon</label>
+                        <select id="hackathonId" name="hackathonId" class="form-select">
+                            <option value="">-- Select --</option>
+                            <option th:each="h : ${hackathons}" th:value="${h.id}" th:text="${h.title}" th:selected="${h.id == selectedHackathonId}">hackathon</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-filter me-1"></i>Load</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div th:if="${finalPitches != null}">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-star-fill" style="color: var(--neon-yellow);"></i> Approved Final Pitches</span>
+                    <span class="badge bg-success" th:text="${#lists.size(finalPitches)} + ' entries'">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table">
+                        <thead><tr><th>Team</th><th>Hackathon</th><th>GitHub</th><th>Demo</th><th>Submitted</th><th>Select as</th></tr></thead>
+                        <tbody>
+                            <tr th:each="s : ${finalPitches}">
+                                <td><strong th:text="${s.team.teamName}">team</strong></td>
+                                <td style="color: var(--text-muted);" th:text="${s.hackathon.title}">hackathon</td>
+                                <td><a th:href="${s.githubLink}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-github"></i></a></td>
+                                <td><a th:href="${s.demoLink}" target="_blank" class="btn btn-sm btn-outline-info" th:if="${s.demoLink}"><i class="bi bi-play-circle"></i></a></td>
+                                <td style="color: var(--text-muted); font-size: 0.85rem;" th:text="${#temporals.format(s.submittedAt, 'MMM dd, HH:mm')}">date</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a th:href="@{/admin/winners/select/{id}(id=${s.id}, rank=1, hackathonId=${selectedHackathonId})}" class="btn btn-sm btn-warning" onclick="return confirm('Select as #1 Winner?')"><i class="bi bi-trophy-fill"></i> #1</a>
+                                        <a th:href="@{/admin/winners/select/{id}(id=${s.id}, rank=2, hackathonId=${selectedHackathonId})}" class="btn btn-sm btn-secondary" onclick="return confirm('Select as #2 Winner?')"><i class="bi bi-trophy"></i> #2</a>
+                                        <a th:href="@{/admin/winners/select/{id}(id=${s.id}, rank=3, hackathonId=${selectedHackathonId})}" class="btn btn-sm btn-danger" onclick="return confirm('Select as #3 Winner?')"><i class="bi bi-trophy"></i> #3</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(finalPitches)}" class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p>No approved final pitches for this hackathon.</p>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

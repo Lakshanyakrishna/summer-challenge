@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Registrations - Hackathon')}"></head>
+<body>
+    <div th:replace="~{fragments :: navbar}"></div>
+    <div class="container py-4">
+        <h2><i class="bi bi-journal-check"></i>Registrations & Payments</h2>
+
+        <ul class="nav nav-tabs mb-4" id="regTabs">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#registrations">Registrations</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#payments">Payments</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="registrations">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <table class="table">
+                            <thead><tr><th>User</th><th>Hackathon</th><th>Date</th><th>Payment</th></tr></thead>
+                            <tbody>
+                                <tr th:each="r : ${registrations}">
+                                    <td th:text="${r.user.name}">user</td>
+                                    <td th:text="${r.hackathon.title}">hackathon</td>
+                                    <td style="color: var(--text-muted);" th:text="${#temporals.format(r.registrationDate, 'MMM dd, yyyy')}">date</td>
+                                    <td><span class="badge" th:text="${r.paymentStatus}" th:classappend="${r.paymentStatus == 'VERIFIED' ? 'bg-success' : r.paymentStatus == 'PENDING' ? 'bg-warning' : 'bg-danger'}">status</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="payments">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <table class="table">
+                            <thead><tr><th>User</th><th>Hackathon</th><th>Amount</th><th>Txn ID</th><th>Status</th><th>Date</th><th></th></tr></thead>
+                            <tbody>
+                                <tr th:each="p : ${payments}">
+                                    <td th:text="${p.user.name}">user</td>
+                                    <td th:text="${p.hackathon.title}">hackathon</td>
+                                    <td th:text="${'$' + #numbers.formatDecimal(p.amount, 1, 2)}">0</td>
+                                    <td style="color: var(--text-muted); font-family: var(--font-mono); font-size: 0.85rem;" th:text="${p.transactionId}">txn</td>
+                                    <td><span class="badge" th:text="${p.status}" th:classappend="${p.status == 'VERIFIED' ? 'bg-success' : p.status == 'PENDING' ? 'bg-warning' : 'bg-danger'}">status</span></td>
+                                    <td style="color: var(--text-muted); font-size: 0.85rem;" th:text="${#temporals.format(p.paymentDate, 'MMM dd, HH:mm')}">date</td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a th:if="${p.status == 'PENDING'}" th:href="@{/admin/payments/verify/{id}(id=${p.id})}" class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i></a>
+                                            <a th:if="${p.status == 'PENDING'}" th:href="@{/admin/payments/reject/{id}(id=${p.id})}" class="btn btn-sm btn-danger"><i class="bi bi-x-lg"></i></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

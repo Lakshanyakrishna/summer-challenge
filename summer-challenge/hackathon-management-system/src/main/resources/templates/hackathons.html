@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Hackathons - Hackathon')}"></head>
+<body>
+    <div th:replace="~{fragments :: navbar}"></div>
+
+    <div class="hero">
+        <div class="container">
+            <h1 class="animate-in">Discover Hackathons</h1>
+            <p class="animate-in-delay-1">Build, compete, and win. Join the most exciting hackathons and showcase your skills.</p>
+            <div class="filter-bar animate-in-delay-2">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search hackathons..." oninput="filterCards()">
+                <select class="form-select" id="statusFilter" onchange="filterCards()">
+                    <option value="all">All Status</option>
+                    <option value="UPCOMING">Upcoming</option>
+                    <option value="ONGOING">Ongoing</option>
+                    <option value="COMPLETED">Completed</option>
+                </select>
+                <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/hackathons}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="hackathon-grid" id="hackathonGrid">
+            <div th:each="h : ${hackathons}" class="card hackathon-card animate-in"
+                 th:attr="data-status=${h.status}, data-title=${h.title}">
+                <div class="card-content">
+                    <div class="top-row">
+                        <span class="badge"
+                              th:classappend="${h.status == 'UPCOMING' ? 'badge-upcoming' : h.status == 'ONGOING' ? 'badge-ongoing' : 'badge-closed'}"
+                              th:text="${h.status}">status</span>
+                        <small style="color: var(--text-muted);"><i class="bi bi-geo-alt"></i> <span th:text="${h.location ?: 'Online'}">loc</span></small>
+                    </div>
+                    <h5 th:text="${h.title}">Title</h5>
+                    <div class="description" th:text="${#strings.abbreviate(h.description, 120)}">desc</div>
+                    <div class="meta-row">
+                        <span class="meta-item"><i class="bi bi-calendar3" style="color: var(--neon-cyan);"></i> <span th:text="${#temporals.format(h.startDate, 'MMM dd')}">s</span> - <span th:text="${#temporals.format(h.endDate, 'MMM dd, yyyy')}">e</span></span>
+                        <span class="meta-item"><i class="bi bi-currency-rupee" style="color: var(--neon-purple);"></i> <span th:text="${h.registrationFee}">249</span></span>
+                    </div>
+                    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/teams}" class="btn btn-primary btn-sm btn-block"><i class="bi bi-gear-fill"></i> Manage</a>
+                    <a sec:authorize="isAuthenticated() and !hasRole('ADMIN')"
+                       class="btn btn-sm btn-block"
+                       th:classappend="${registeredMap != null and registeredMap.containsKey(h.id) and registeredMap[h.id]} ? 'btn-success' : 'btn-primary'"
+                       th:href="${registeredMap != null and registeredMap.containsKey(h.id) and registeredMap[h.id]} ? @{/dashboard} : @{/payment(hackathonId=${h.id})}"
+                       th:styleappend="${registeredMap != null and registeredMap.containsKey(h.id) and registeredMap[h.id]} ? '' : 'background: linear-gradient(135deg, var(--neon-cyan), #0088ff); border: none;'">
+                        <i class="bi" th:classappend="${registeredMap != null and registeredMap.containsKey(h.id) and registeredMap[h.id]} ? 'bi-speedometer2' : 'bi-pencil-square'"></i>
+                        <span th:text="${registeredMap != null and registeredMap.containsKey(h.id) and registeredMap[h.id]} ? 'Dashboard' : 'Register Now'"></span>
+                    </a>
+                    <a sec:authorize="!isAuthenticated()" th:href="@{/hackathons/{id}(id=${h.id})}" class="btn btn-outline-primary btn-sm btn-block"><i class="bi bi-eye"></i> View Details</a>
+                </div>
+            </div>
+        </div>
+        <div th:if="${#lists.isEmpty(hackathons)}" class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <p>No hackathons available yet</p>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/hackathons}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create</a>
+        </div>
+    </div>
+
+    <script>
+    function filterCards() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        document.querySelectorAll('.hackathon-card').forEach(card => {
+            const title = card.getAttribute('data-title').toLowerCase();
+            const cardStatus = card.getAttribute('data-status');
+            const matchSearch = !search || title.includes(search);
+            const matchStatus = status === 'all' || cardStatus === status;
+            card.style.display = matchSearch && matchStatus ? '' : 'none';
+        });
+    }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

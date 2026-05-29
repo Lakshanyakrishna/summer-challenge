@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('My Team - Hackathon')}"></head>
+<body>
+    <div th:replace="~{fragments :: navbar}"></div>
+
+    <div class="container" style="padding: 40px 0 60px;">
+        <div class="animate-in">
+            <h2><i class="bi bi-people"></i> My Team</h2>
+        </div>
+
+        <!-- No Team State -->
+        <div id="noTeamView" class="animate-in-delay-1">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="glass-panel text-center" style="padding: 48px 24px;">
+                        <i class="bi bi-people" style="font-size: 3.5rem; color: var(--text-muted); opacity: 0.4; margin-bottom: 16px; display: block;"></i>
+                        <h4 style="margin-bottom: 8px;">Not in a team yet</h4>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Create a new team or join one with a code</p>
+                        <div class="d-flex gap-3 justify-content-center">
+                            <button class="btn btn-primary btn-lg" onclick="showCreate()"><i class="bi bi-plus-circle"></i> Create Team</button>
+                            <button class="btn btn-outline-primary btn-lg" onclick="showJoin()"><i class="bi bi-box-arrow-in-right"></i> Join Team</button>
+                        </div>
+                    </div>
+
+                    <div id="createForm" style="display:none;" class="glass-panel mt-3">
+                        <h5 style="margin-bottom: 16px;"><i class="bi bi-plus-circle" style="color: var(--neon-cyan);"></i> Create Team</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Team Name</label>
+                            <input type="text" id="teamNameInput" class="form-control" placeholder="Enter team name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Hackathon</label>
+                            <select id="hackathonSelect" class="form-select"><option>Loading...</option></select>
+                        </div>
+                        <button class="btn btn-success btn-block" onclick="createTeam()"><i class="bi bi-check-lg"></i> Create</button>
+                    </div>
+
+                    <div id="joinForm" style="display:none;" class="glass-panel mt-3">
+                        <h5 style="margin-bottom: 16px;"><i class="bi bi-box-arrow-in-right" style="color: var(--neon-cyan);"></i> Join Team</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Team Code</label>
+                            <input type="text" id="teamCodeInput" class="form-control" placeholder="Enter 6-character code" maxlength="6" style="text-transform:uppercase; font-family:monospace; font-size:1.3rem; letter-spacing:6px;">
+                        </div>
+                        <button class="btn btn-success btn-block" onclick="joinTeam()"><i class="bi bi-box-arrow-in-right"></i> Join</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team View -->
+        <div id="hasTeamView" style="display:none;">
+            <div class="grid-sidebar animate-in-delay-1">
+                <div>
+                    <div class="glass-panel" style="margin-bottom: 20px;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 style="margin: 0;" id="teamNameHeading">Team Name</h5>
+                            <span class="badge badge-upcoming" id="stageBadge">Stage 1</span>
+                        </div>
+                        <div class="text-center mb-3">
+                            <div class="team-code-display" id="teamCodeDisplay">------</div>
+                            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 8px;">Share this code for others to join</p>
+                        </div>
+                        <div class="gradient-divider"></div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span style="color: var(--text-muted); font-size: 0.9rem;"><i class="bi bi-people me-1"></i> <span id="memberCountText">0</span> / 4 members</span>
+                            <span style="color: var(--text-muted); font-size: 0.9rem;"><i class="bi bi-trophy me-1" style="color: var(--neon-yellow);"></i> <span id="hackathonNameText">-</span></span>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel" style="margin-bottom: 20px;">
+                        <h5 style="font-size: 0.95rem; margin-bottom: 16px;"><i class="bi bi-person-badge" style="color: var(--neon-cyan);"></i> Team Members</h5>
+                        <div id="membersList">
+                            <div class="team-member-card">
+                                <div class="member-avatar">L</div>
+                                <div class="member-info">
+                                    <strong>Loading...</strong>
+                                    <small>Loading...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="glass-panel" style="margin-bottom: 20px;">
+                        <h5 style="font-size: 0.95rem; margin-bottom: 16px;"><i class="bi bi-link-45deg" style="color: var(--neon-purple);"></i> Invite Members</h5>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">Share the team code with your teammates</p>
+                        <button class="btn btn-primary btn-block" onclick="copyCode()"><i class="bi bi-clipboard"></i> Copy Team Code</button>
+                    </div>
+
+                    <div class="glass-panel">
+                        <h5 style="font-size: 0.95rem; margin-bottom: 16px; color: var(--neon-red);"><i class="bi bi-exclamation-triangle"></i> Danger Zone</h5>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">Leave the team (only available if not the leader)</p>
+                        <button class="btn btn-outline-primary btn-sm" id="leaveBtn" onclick="leaveTeam()" disabled><i class="bi bi-box-arrow-left"></i> Leave Team</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API = '/api';
+    let userData = null;
+    let teamData = null;
+
+    function api(path, opts = {}) {
+        return fetch(API + path, { ...opts, headers: { 'Content-Type': 'application/json', ...opts.headers } }).then(r => r.json());
+    }
+
+    function showCreate() {
+        document.getElementById('createForm').style.display = 'block';
+        document.getElementById('joinForm').style.display = 'none';
+        api('/hackathons').then(hs => {
+            const sel = document.getElementById('hackathonSelect');
+            sel.innerHTML = hs.map(h => '<option value="' + h.id + '">' + h.title + '</option>').join('');
+        });
+    }
+    function showJoin() {
+        document.getElementById('joinForm').style.display = 'block';
+        document.getElementById('createForm').style.display = 'none';
+    }
+    async function createTeam() {
+        const name = document.getElementById('teamNameInput').value;
+        const hackathonId = document.getElementById('hackathonSelect').value;
+        if (!name || !hackathonId) { alert('Fill all fields'); return; }
+        const result = await api('/teams/create', { method: 'POST', body: JSON.stringify({ teamName: name, hackathonId: parseInt(hackathonId) }) });
+        if (result.error) { alert(result.error); return; }
+        location.reload();
+    }
+    async function joinTeam() {
+        const code = document.getElementById('teamCodeInput').value.toUpperCase();
+        if (!code || code.length !== 6) { alert('Enter a valid 6-character code'); return; }
+        const result = await api('/teams/join', { method: 'POST', body: JSON.stringify({ teamCode: code }) });
+        if (result.error) { alert(result.error); return; }
+        location.reload();
+    }
+
+    async function copyCode() {
+        if (!teamData) return;
+        try {
+            await navigator.clipboard.writeText(teamData.teamCode);
+            alert('Team code copied!');
+        } catch { prompt('Copy this code:', teamData.teamCode); }
+    }
+
+    async function leaveTeam() {
+        if (!confirm('Leave this team?')) return;
+        alert('Leave feature coming soon');
+    }
+
+    async function loadTeam() {
+        const me = await api('/auth/me');
+        if (me.error) { window.location = '/login'; return; }
+        userData = me;
+
+        const teams = await api('/teams/my');
+        if (teams && teams.length > 0) {
+            teamData = teams[0];
+            document.getElementById('noTeamView').style.display = 'none';
+            document.getElementById('hasTeamView').style.display = 'block';
+            document.getElementById('teamNameHeading').textContent = '🏆 ' + teamData.teamName;
+            document.getElementById('teamCodeDisplay').textContent = teamData.teamCode;
+            document.getElementById('stageBadge').textContent = 'Stage ' + teamData.stageStatus;
+            document.getElementById('memberCountText').textContent = teamData.memberCount;
+            document.getElementById('hackathonNameText').textContent = teamData.hackathonTitle;
+
+            const initials = userData.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            document.getElementById('membersList').innerHTML =
+                '<div class="team-member-card"><div class="member-avatar">' + initials + '</div><div class="member-info"><strong>' + userData.name + '</strong><small>' + userData.email + '</small></div><span class="leader-badge">Leader</span></div>';
+            document.getElementById('leaveBtn').disabled = true;
+        }
+    }
+
+    loadTeam();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Submissions - Hackathon')}"></head>
+<body>
+    <div th:replace="~{fragments :: navbar}"></div>
+    <div class="container py-4">
+        <h2><i class="bi bi-box-seam"></i>All Submissions</h2>
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table">
+                    <thead><tr><th>ID</th><th>Team</th><th>Hackathon</th><th>Stage</th><th>Status</th><th>GitHub</th><th>Submitted</th></tr></thead>
+                    <tbody>
+                        <tr th:each="s : ${submissions}">
+                            <td style="color: var(--text-muted);" th:text="${s.id}">1</td>
+                            <td th:text="${s.team.teamName}">team</td>
+                            <td th:text="${s.hackathon.title}">hackathon</td>
+                            <td><span class="badge" th:text="${s.stage.replace('_', ' ')}" th:classappend="${s.stage == 'STAGE_1' ? 'bg-primary' : s.stage == 'STAGE_2' ? 'bg-info' : 'bg-warning'}">stage</span></td>
+                            <td><span class="badge" th:text="${s.evaluationStatus}" th:classappend="${s.evaluationStatus == 'APPROVED' ? 'bg-success' : s.evaluationStatus == 'REJECTED' ? 'bg-danger' : s.evaluationStatus.startsWith('WINNER_') ? 'bg-warning' : 'bg-secondary'}">status</span></td>
+                            <td><a th:href="${s.githubLink}" target="_blank" th:text="${s.githubLink}" style="color: var(--neon-cyan);"></a></td>
+                            <td style="color: var(--text-muted); font-size: 0.85rem;" th:text="${#temporals.format(s.submittedAt, 'MMM dd, HH:mm')}">date</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
